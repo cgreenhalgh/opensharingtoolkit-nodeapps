@@ -1,11 +1,14 @@
 # Node.js on android
 
+Working notes on building Node.js into an Android app.
+
+## Node itself
+
 (main node repo)[https://github.com/joyent/node]
 
 Looks like it probably has built-in support now for building on Android.
 
-As of 20140402 latest stable version is 0.10.26
-But this has quite a lot of android build issues that have been resolved in other version(s), e.g. master at this point which is 
+As of 20140402 latest stable version is v0.10.26. But this has quite a lot of android build issues that have been resolved in other version(s), e.g. master at this point which is something like v0.11.12. 
 
 
 ```
@@ -14,18 +17,13 @@ cd node
 git checkout v0.10.26
 ```
 
-might need
-```
-sudo apt-get install libbz2-dev
-```
-
 See also (android config script)[https://github.com/joyent/node/blob/master/android-configure]. Download/checkout and change toolchain (`arm-linux-androideabi-4.7`) and platform (`android-9`) depending on your version of the NDK, then:
 ```
 source ./android-configure PATH_TO_ANDROID_NDK
 ```
 try (assuming system python 2.6/2.7 including bz2)
 ```
-mv android-toolchain/bin/python pythonlink
+rm android-toolchain/bin/python
 ```
 try (if complaint about arm_version)
 ```
@@ -36,178 +34,69 @@ export GYP_DEFINES="armv7=0 arm_version=7"
     --dest-os=android --without-ssl
 ```
 
-## old notes...
+This node executable builds and runs on android (for me). 
 
-v0.10.26
+## NPM and packages for android
 
-edit `config.gypi` and add `ANDROID=1` to 
+(some notes in a comment)[http://n8.io/cross-compiling-nodejs-v0.8/]:
 ```
-'defines': [],
-```
-i.e.
-```
-'defines': ['ANDROID=1'],
-```
+aqpeeb • a year ago
+As far as npm goes, here's what I found works (for me) cross compiling for arm. My host machine is a x86-64, my target an armv7. I built node as-per instructions here and elsewhere. Now I want to build node packages (like sqlite3) that require a compiler:
 
-(Do that instead of ./configure) Then continue build as normal:
-```
-make
-```
-If you get
-```
-../deps/cares/src/ares_expand_name.c:31:35: fatal error: arpa/nameser_compat.h: No such file or directory
-```
-Then edit `deps/cares/config/linux/ares_config.h` and change
-```
-#define HAVE_ARPA_NAMESER_COMPAT_H 1
-```
-to
-```
-/* #undef HAVE_ARPA_NAMESER_COMPAT_H 1 */
+# my npm built for the host machine, not the target!
+NPM := $(STAGING_DIR_HOST)/bin/npm
+# where to put node_modules
+$(NPM) config set prefix $(1)/usr
+# the target arch
+$(NPM) config set target_arch arm
+# $(2) is the package I want to install (ie. sqlite3)
+# TARGET_CONFIGURE_OPTS and MAKE_VARS are the CC, CXX, LD, AR, etc and CFLAGS, etc that you use to build target executables, the cross toolchain
+$(TARGET_CONFIGURE_OPTS) $(MAKE_VARS) $(NPM) install -g $(2)
+# and finally, I also had to:
+mv $(1)/usr/lib/node_modules $(1)/usr/lib/node
+
+The "config set" of prefix and target_arch are key, as well as the CC, CXX, CFLAGS, etc env you need to set up before calling npm.
 ```
 
-If you get
-```
-../deps/uv/include/uv-private/uv-unix.h:148:1: error: unknown type name 'pthread_barrier_t'
-```
-edit `deps/uv/include/uv-private/uv-unix.h` and change 
-```
-#if defined(__APPLE__) && defined(__MACH__)
+## socket.io
 
-typedef struct {
-  unsigned int n;
-  unsigned int count;
-  uv_mutex_t mutex;
-  uv_sem_t turnstile1;
-  uv_sem_t turnstile2;
-} uv_barrier_t;
+Doesn't build with the above using regular npm. For a start regular npm is stable, i.e. 0.10.x and has lots of problems in general with Android cross-compiling, and socket.io has a dependency on (ws)[https://github.com/einaros/ws] which has two native files which therefore don't build. There was also a problem with CFLAGS including -m64 which produces an error with ARM cross-compiler.
 
-#else /* defined(__APPLE__) && defined(__MACH__) */
+Native bits of node packages are building using (node-gyp)[https://github.com/TooTallNate/node-gyp], which in turn is a node application and typically installed with npm. So presumably I'll need to build an up-to-date version of node and npm for the host (not target) machine. 
 
-typedef pthread_barrier_t uv_barrier_t;
+See also (gyp user docs)[https://code.google.com/p/gyp/wiki/GypUserDocumentation].
 
-#endif /* defined(__APPLE__) && defined(__MACH__) */
+(socket.io)[https://github.com/LearnBoost/socket.io], depends on:
+- (engine.io)[]
+- (socket.io-parser)[]
+- (socket.io-client)[], which depends on 
 ```
-to 
+  "engine.io-client": "1.0.5",
+    "emitter": "http://github.com/component/emitter/archive/1.0.1.tar.gz",
+    "bind": "http://github.com/component/bind/archive/0.0.1.tar.gz",
+    "object-component": "0.0.3",
+    "socket.io-parser": "2.1.2",
+    "parseuri": "0.0.2",
+    "to-array": "0.1.3",
+    "debug": "0.7.4",
+    "has-binary-data": "0.1.0",
+    "indexof": "0.0.1"
 ```
-#if (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__)
-...
-```
-```
-../deps/uv/src/unix/stream.c:746:16: error: 'IOV_MAX' undeclared (first use in this function)
-```
-near the top of `deps/uv/include/uv-private/uv-unix.h` add
-```
-#ifdef __ANDROID__
-#define IOV_MAX 1024
-#endif
-```
-if
-```
-../deps/uv/src/unix/thread.c:286:3: warning: implicit declaration of function 'pthread_condattr_setclock' [-Wimplicit-function-declaration]
-   if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC))
-   ^
-../deps/uv/src/unix/thread.c: In function 'uv_barrier_init':
-../deps/uv/src/unix/thread.c:412:3: warning: implicit declaration of function 'pthread_barrier_init' [-Wimplicit-function-declaration]
-   if (pthread_barrier_init(barrier, NULL, count))
-   ^
-../deps/uv/src/unix/thread.c: In function 'uv_barrier_destroy':
-../deps/uv/src/unix/thread.c:420:3: warning: implicit declaration of function 'pthread_barrier_destroy' [-Wimplicit-function-declaration]
-   if (pthread_barrier_destroy(barrier))
-   ^
-../deps/uv/src/unix/thread.c: In function 'uv_barrier_wait':
-../deps/uv/src/unix/thread.c:426:3: warning: implicit declaration of function 'pthread_barrier_wait' [-Wimplicit-function-declaration]
-   int r = pthread_barrier_wait(barrier);
-   ^
-../deps/uv/src/unix/thread.c:427:17: error: 'PTHREAD_BARRIER_SERIAL_THREAD' undeclared (first use in this function)
-   if (r && r != PTHREAD_BARRIER_SERIAL_THREAD)
-                 ^
-../deps/uv/src/unix/thread.c:427:17: note: each undeclared identifier is reported only once for each function it appears in
-```
-edit `deps/uv/src/unix/thread.c` and change several occurances (1st, 3rd, 5th) of 
-```
-#if defined(__APPLE__) && defined(__MACH__)
-```
-to 
-```
-#if (defined(__APPLE__) && defined(__MACH__)) || defined(__ANDROID__)
-```
+- (socket.io-adapter)[]
+- (has-binary-data)[]
+- (debug)[https://github.com/visionmedia/debug]
 
-if
-```
-../deps/uv/src/unix/linux-core.c:46:22: fatal error: ifaddrs.h: No such file or directory
-```
-edit `deps/uv/src/unix/linux-core.c`. Before 
-```
-#ifdef HAVE_IFADDRS_H
-# include <ifaddrs.h>
-#endif
-```
-insert
-```
-#ifdef __ANDROID__
-#  undef HAVE_IFADDRS_H
-#endif
-```
+## See also
 
-If
-```
-../deps/uv/src/unix/linux-syscalls.h:140:25: warning: 'struct timespec' declared inside parameter list [enabled by default]
-```
-then edit `deps/uv/src/unix/linux-syscalls.h`
-insert 
-```
-#include <linux/time.h>
-```
+versions using debiankit/similar to build on android directly
 
-If 
-```
-ImportError: No module named bz2
-```
-try (assuming system python 2.6/2.7 including bz2)
-```
-mv android-toolchain/bin/python pythonlink
-```
+- http://sven-ola.dyndns.org/repo/debian-kit-en.html
+- http://masashi-k.blogspot.co.uk/2013/08/nodejs-on-android.html
+- http://mitchtech.net/node-js-on-android-linux/
 
-if
-```
-../deps/v8/src/platform-linux.cc:1206:13: error: 'SYS_tgkill' was not declared in this scope
-```
-ensure define `ANDROID=1` (see top)
+## Node as an Android Library
 
-if
-```
-../src/cares_wrap.cc:376:36: error: 'ns_c_in' was not declared in this scope
-```
-cares_wrap needs to include `deps/cares/include/nameser.h` (not default dummy header in toolchain)
-edit `src/cares_wrap.cc`
-```
-#if defined(__OpenBSD__) || defined(__MINGW32__) || defined(_MSC_VER)
-# include <nameser.h>
-#else
-# include <arpa/nameser.h>
-#endif
-```
-to
-```
-#if defined(__ANDROID__) || defined(__OpenBSD__) || defined(__MINGW32__) || defined(_MSC_VER)
-...
-```
-
-if
-```
-../src/node.cc: In function 'uid_t node::uid_by_name(const char*)':
-```
-edit `src/node.cc` replace 
-```
-```
-with 
-```
-```
-
-## Older (node 0.8) versions
-
-one framework based on 0.8 for running node with various additional supports:
+one framework (based on v0.6) for running node with various additional supports:
 
 - https://github.com/paddybyers/anode
 - https://github.com/paddybyers/node
@@ -227,20 +116,29 @@ git clone git://github.com/paddybyers/openssl-android.git
 cd openssl-android
 ```
 Edit `jni/Application.mk` and change `NDK_TOOLCHAIN_VERSION=4.4.3` to a toolchain in your NDK (e.g. `4.6`)
+```
+~/android/android-ndk-r9c/ndk-build
+```
+```
+git clone git://github.com/paddybyers/anode.git
+git clone git://github.com/paddybyers/pty.git
+git clone git://github.com/paddybyers/node.git
+```
+```
+cd anode
+~/android/android-ndk-r9c/ndk-build NDK_PROJECT_PATH=. NDK_APPLICATION_MK=Application.mk
+cp libs/armeabi/libjninode.so ./app/assets/
+cp libs/armeabi/bridge.node ./app/assets/
+```
+Download (jtar)[https://code.google.com/p/jtar/downloads/detail?name=jtar-1.0.4.jar&can=2&q=] to `anode/app/lib` (create the directory).
 
-ndk-build
+Apparently:
+- Open Eclipse and do: File->Import->General->Existing projects into workspace
+- Point to the <work dir>/anode directory and import the app, libnode and bridge-java projects.
+- In app Properties > Android add the libnode project as a library
+- build and run
 
-
-general arm cross-compile (pi)
-
-- https://gist.github.com/adammw/3245130
-
-versions using debiankit/similar to build on android directly
-
-- http://sven-ola.dyndns.org/repo/debian-kit-en.html
-- http://masashi-k.blogspot.co.uk/2013/08/nodejs-on-android.html
-- http://mitchtech.net/node-js-on-android-linux/
-
+OK. But all rather complicated - I'm not really after native Java module support.
 
 
 
