@@ -17,10 +17,22 @@ cd node
 git checkout v0.10.26
 ```
 
-See also (android config script)[https://github.com/joyent/node/blob/master/android-configure]. Download/checkout and change toolchain (`arm-linux-androideabi-4.7`) and platform (`android-9`) depending on your version of the NDK, then:
+See also (android config script)[https://github.com/joyent/node/blob/master/android-configure]. Change toolchain (`arm-linux-androideabi-4.7`) and platform (`android-9`) depending on your version of the NDK:
 ```
-source ./android-configure PATH_TO_ANDROID_NDK
+export TOOLCHAIN=$PWD/android-toolchain
+mkdir -p $TOOLCHAIN
+<NDK_PATH>/build/tools/make-standalone-toolchain.sh \
+    --toolchain=arm-linux-androideabi-4.7 \
+    --arch=arm \
+    --install-dir=$TOOLCHAIN \
+    --platform=android-9
+export PATH=$TOOLCHAIN/bin:$PATH
+export AR=arm-linux-androideabi-ar
+export CC=arm-linux-androideabi-gcc
+export CXX=arm-linux-androideabi-g++
+export LINK=arm-linux-androideabi-g++
 ```
+
 try (assuming system python 2.6/2.7 including bz2)
 ```
 rm android-toolchain/bin/python
@@ -31,10 +43,21 @@ export GYP_DEFINES="armv7=0 arm_version=7"
 ./configure \
     --without-snapshot \
     --dest-cpu=arm \
-    --dest-os=android --without-ssl
+    --dest-os=android --without-ssl --prefix=<NODE_ARM_DIR>
+make
+make install
 ```
 
 This node executable builds and runs on android (for me). 
+
+Probably build a native version as well for npm, etc.. I.e. with clear environment
+```
+./configure --prefix=<NODE_NATIVE_DIR>
+make
+make install
+```
+
+This should be the version of node to use for build tools, e.g. npm, node-gyp. So lets try adding <NODE_NATIVE_DIR>/bin to PATH. 
 
 ## NPM and packages for android
 
@@ -57,34 +80,59 @@ mv $(1)/usr/lib/node_modules $(1)/usr/lib/node
 
 The "config set" of prefix and target_arch are key, as well as the CC, CXX, CFLAGS, etc env you need to set up before calling npm.
 ```
-
-## socket.io
-
-Doesn't build with the above using regular npm. For a start regular npm is stable, i.e. 0.10.x and has lots of problems in general with Android cross-compiling, and socket.io has a dependency on (ws)[https://github.com/einaros/ws] which has two native files which therefore don't build. There was also a problem with CFLAGS including -m64 which produces an error with ARM cross-compiler.
+Not working for me at the moment (on ws, dependency of socket.io, below)...
+But that may be optional!!
 
 Native bits of node packages are building using (node-gyp)[https://github.com/TooTallNate/node-gyp], which in turn is a node application and typically installed with npm. So presumably I'll need to build an up-to-date version of node and npm for the host (not target) machine. 
 
+node-gyp has option `--nodedir`. 
+
+Building host node from git, `./configure`. Option `--prefix=PATH`, defaults `/usr/local`. Then `make`. Configure creates `config.gypi` which should have the platform-specific gyp configuration which node-gyp should look for. So we also need node configured for android.
+
+using npm with unstable node release requires explicit --nodedir=... flag.
+May also need to move asign built-in python gyp, try
+```
+$ python -c 'import gyp; print gyp.__file__'
+```
+move python package dir if found and following giving error.
+```
+npm install --nodedir=/home/pszcmg/android/node ws
+```
+NB nodedir is a node git source directory, not an install directory.
+Now looks like standard nan.h header from nan module isn't consistent (node_modules/ws/builderrors.log)...
+```
+../node_modules/nan/nan.h:319:38: error: ‘New’ is not a member of ‘v8::String’
+ # define _NAN_ERROR(fun, errmsg) fun(v8::String::New(errmsg))
+                                      ^
+```
+maybe try specific nan, e.g. 
+```
+git clone https://github.com/rvagg/nan.git
+npm install ./nan/
+```
+
+Still failing - maybe nan changes??
+```
+../src/bufferutil.cc: In static member function ‘static void BufferUtil::Initialize(v8::Handle<v8::Object>)’:
+../src/bufferutil.cc:27:58: error: no matching function for call to ‘v8::FunctionTemplate::New(void (&)(const v8::FunctionCallbackInfo<v8::Value>&))’
+```
+
+Really unclear whether version(s) of nan are compatible with version(s) of node and version(s) of ws. 
+But may not matter as ws native parts don't actually seem to be required at the moment.
+
 See also (gyp user docs)[https://code.google.com/p/gyp/wiki/GypUserDocumentation].
 
-(socket.io)[https://github.com/LearnBoost/socket.io], depends on:
-- (engine.io)[]
-- (socket.io-parser)[]
-- (socket.io-client)[], which depends on 
+
+## socket.io
+
+Not quite sure what has changed but seems ok-ish now.
+
+Probably best using the new node/npm, i.e. add their install dir to the PATH, then:
 ```
-  "engine.io-client": "1.0.5",
-    "emitter": "http://github.com/component/emitter/archive/1.0.1.tar.gz",
-    "bind": "http://github.com/component/bind/archive/0.0.1.tar.gz",
-    "object-component": "0.0.3",
-    "socket.io-parser": "2.1.2",
-    "parseuri": "0.0.2",
-    "to-array": "0.1.3",
-    "debug": "0.7.4",
-    "has-binary-data": "0.1.0",
-    "indexof": "0.0.1"
+npm install socket.io
 ```
-- (socket.io-adapter)[]
-- (has-binary-data)[]
-- (debug)[https://github.com/visionmedia/debug]
+
+Simple test e.g. (here)[http://socket.io/#how-to-use]
 
 ## See also
 
