@@ -10,7 +10,7 @@ The runner app will monitor standard out/error. There will be standard command l
 
 - magic string/interface version identifier, initially "--opensharingtoolkit-nodeapp-0.1"
 - control port - to connect back to as a secure control/logging channel 
-- persistent instance ID  
+- persistent instance ID
 
 The control/logging protocol will comprise JSON-encoded values, newline separated, over TCP. Exact details TBD. Messages emitted by node should include:
 
@@ -69,7 +69,7 @@ So node should get the full file path of the nodeapp module (i.e. package direct
 
 So if npm is used to pull in dependencies then it would save space if common dependencies are installed first and explicitly under a common higher-level folder.
 
-So by default we will copy a `node_modules` directory hierarchy onto the apps `files` area, and identify the module for node to run using its absolute path (which will be within that directory).  
+So by default we will copy a `node_modules` directory hierarchy onto the apps `files` area, and identify the module for node to run using its absolute path (which will be within that directory).
 
 ### Marking NodeApps
 
@@ -119,5 +119,24 @@ There may be a global settings activity (not sure).
 There will be a top-level menu activity, with links to instance list activity, new instance dialog and any general settings.
 
 Eventually there will activities for updating node apps, i.e. automatic download.
+
+## Application database schema
+
+The application will use database to track instances and nodeapps. Nodeapp primary key will be full path name. Use of nodeapp table will be optional. Instance primary key will be auto-increment int. 
+
+Instance fields (only persistent instances need be in database):
+- id: int auto-increment (pk)
+- nodeapppath: string (fk?)
+- persistentpath: string
+- title: string (optional)
+- created: datetime
+
+Nodeapp fields:
+- nodeapppath: string (pk)
+- title: string (cached from package.json name, or overriden)
+- version: string (cached from package.json version)
+- description: string (optional, cached from opt. package.json deeciption)
+- lastmodifiedtime: long (java system time)
+- lastcheckedtime: long (java system time)
 
 
