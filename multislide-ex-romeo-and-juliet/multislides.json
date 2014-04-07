@@ -1,0 +1,143 @@
+{
+  "title": "Romeo and Juliet, Act II, Scene II (excerpt)",
+  "roles": [
+    {
+      "title": "Romeo",
+      "optional": false
+    },
+    {
+      "title": "Juliet",
+      "optional": false
+    },
+    {
+      "title": "Balcony (backdrop)",
+      "optional": true
+    }
+  ],
+  "slide-sets": [
+   {
+    "slides": [
+      {
+        "title": "Romeo (1)",
+        "html": "<img src=\"shakespeare_004_romeo.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true
+        }
+      },
+      {
+        "title": "Juliet (1)",
+	"html": ""
+      },
+      {
+        "title": "Backdrop (1)",
+        "html": "<img src=\"shakespeare_007_balcony_randj.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true,
+          "back": true,
+          "restart": true
+        }
+      }
+    ]
+   },
+   {
+    "slides": [
+      {
+        "title": "Romeo (2)",
+        "html": "<div style=\"width:100%\"><p>But, soft! what light through yonder window breaks?<br>It is the east, and Juliet is the sun.</p><audio controls autoplay=\"true\"><source src=\"Romeo_and_Juliet_Act_2-0309-0317-Romeo.mp3\" type=\"audio/mpeg\"></audio></div>",
+        "controls": {
+          "advance": true
+        }
+      },
+      {
+        "title": "Juliet (2)",
+        "html": "<img src=\"juliet-cropped.jpg\" style=\"width:100%;height:auto;\">"
+      },
+      {
+        "title": "Backdrop (2)",
+        "html": "<img src=\"shakespeare_007_balcony_randj.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true,
+          "back": true,
+          "restart": true
+        }
+      }
+    ]
+   },
+   {
+    "slides": [
+      {
+        "title": "Romeo (3)",
+        "html": "<div style=\"width:100%\"><p>O, that I were a glove upon that hand,<br>That I might touch that cheek! </p><audio controls autoplay=\"true\"><source src=\"Romeo_and_Juliet_Act_2-0433-0438-Romeo.mp3\" type=\"audio/mpeg\"></audio></div>",
+        "controls": {
+          "advance": true
+        }
+      },
+      {
+        "title": "Juliet (3)",
+        "html": "<img src=\"juliet-cropped.jpg\" style=\"width:100%;height:auto;\">"
+      },
+      {
+        "title": "Backdrop (3)",
+        "html": "<img src=\"shakespeare_007_balcony_randj.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true,
+          "back": true,
+          "restart": true
+        }
+      }
+    ]
+   },
+   {
+    "slides": [
+      {
+        "title": "Romeo (4)",
+        "html": "<img src=\"shakespeare_004_romeo.jpg\" style=\"width:100%;height:auto;\">"
+      },
+      {
+        "title": "Juliet (4)",
+        "html": "<div style=\"width:100%\"><p>O Romeo, Romeo! wherefore art thou Romeo?</p><audio controls autoplay=\"true\"><source src=\"Romeo_and_Juliet_Act_2-0508-0513-Juliet.mp3\" type=\"audio/mpeg\"></audio></div>",
+        "controls": {
+          "advance": true
+        }
+      },
+      {
+        "title": "Backdrop (4)",
+        "html": "<img src=\"shakespeare_007_balcony_randj.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true,
+          "back": true,
+          "restart": true
+        }
+      }
+    ]
+   },
+   {
+    "slides": [
+      {
+        "title": "Romeo (5)",
+        "html": "<img src=\"shakespeare_004_romeo.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "restart": true
+        }
+      },
+      {
+        "title": "Juliet (5)",
+        "html": "<img src=\"juliet-cropped.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "restart": true
+        }
+      },
+      {
+        "title": "Backdrop (5)",
+        "html": "<img src=\"shakespeare_007_balcony_randj.jpg\" style=\"width:100%;height:auto;\">",
+        "controls": {
+          "advance": true,
+          "back": true,
+          "restart": true
+        }
+      }
+    ]
+   }
+  ]
+}
+

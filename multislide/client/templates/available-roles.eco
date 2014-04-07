@@ -1,0 +1,15 @@
+<div data-role="page" data-dialog="true" id="available-roles">
+
+	<div data-role="header">
+		<h1>Available Roles</h1>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+		<p>Which role do you want to play?</p>
+<% for role,ix in @: %>
+		<a href="#" class="select-role" id="select-role-<%= ix %>" data-role="button" data-rel="back"><%= role.title %><%= if role.optional then " (optional)" %></a>
+<% end %>
+	</div><!-- /content -->
+
+</div><!-- /page -->
+

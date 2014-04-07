@@ -1,0 +1,11 @@
+{
+  "name": "multislide-ex-romeo-and-juliet",
+  "version": "0.1.0",
+  "main": "lib/main",
+  "contributors": [
+  ],
+  "dependencies": {
+    "multislide": "0.1.0"
+  }
+}
+

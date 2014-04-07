@@ -1,0 +1,19 @@
+<div data-role="page" id="slide-<%= @ix %>">
+
+	<div data-role="header">
+		<h1><%= if @title? then @title else '(no title)' %></h1>
+		<div data-role="navbar">
+			<ul>
+				<li><a href="#" id="slide-<%= @ix %>-back" class="<%= if not @controls?.back then 'ui-state-disabled'%>" data-icon="arrow-l">Back</a></li>
+				<li><a href="#" id="slide-<%= @ix %>-restart" class="<%= if not @controls?.restart then 'ui-state-disabled'%>" data-icon="bars">Restart</a></li>
+				<li><a href="#" id="slide-<%= @ix %>-advance" class="<%= if not @controls?.advance then 'ui-state-disabled'%>" data-icon="arrow-r">Advance</a></li>
+			</ul>
+		</div>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+<%- @html %>
+	</div><!-- /content -->
+
+</div><!-- /page -->
+
