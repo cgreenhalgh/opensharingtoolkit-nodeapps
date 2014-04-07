@@ -86,7 +86,7 @@
       self = this;
       this.app = require('http').createServer(this.handler);
       this.io = require('socket.io').listen(this.app);
-      this.app.listen(8080, function() {});
+      this.app.listen(8081, function() {});
       this.port = this.app.address().port;
       console.log("multislide running on port " + this.port);
       return this.io.sockets.on('connection', function(socket) {

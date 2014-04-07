@@ -43,10 +43,11 @@ export GYP_DEFINES="armv7=0 arm_version=7"
 ./configure \
     --without-snapshot \
     --dest-cpu=arm \
-    --dest-os=android --without-ssl --prefix=<NODE_ARM_DIR>
+    --dest-os=android --prefix=<NODE_ARM_DIR>
 make
 make install
 ```
+(Best to include SSL support - socket.io expects it - although some older docs suggest it can be a problem in which case configure has the option `--without-ssl`)
 
 This node executable builds and runs on android (for me). 
 

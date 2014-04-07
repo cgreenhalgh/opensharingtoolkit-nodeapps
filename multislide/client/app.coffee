@@ -4,9 +4,10 @@ availableRolesTemplate = require 'templates/available-roles'
 slideTemplate = require 'templates/slide'
 
 exports.init = () ->
-  console.log "client inited"
+  baseurl = window.location.protocol+"//"+window.location.host
+  console.log "client inited for server #{baseurl}"
 
-  socket = io.connect('http://localhost')
+  socket = io.connect(baseurl)
   socket.on 'available-roles', (roles) ->
     console.log "available-roles: #{roles.length}"
     dialog = availableRolesTemplate roles

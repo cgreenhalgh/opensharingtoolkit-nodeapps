@@ -56,9 +56,10 @@
   slideTemplate = require('templates/slide');
 
   exports.init = function() {
-    var socket;
-    console.log("client inited");
-    socket = io.connect('http://localhost');
+    var baseurl, socket;
+    baseurl = window.location.protocol + "//" + window.location.host;
+    console.log("client inited for server " + baseurl);
+    socket = io.connect(baseurl);
     socket.on('available-roles', function(roles) {
       var dialog;
       console.log("available-roles: " + roles.length);

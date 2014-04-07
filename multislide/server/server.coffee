@@ -68,7 +68,7 @@ class Multislide
     @io = require('socket.io').listen(@app)
   
     # port should be 0=dynamic!!
-    @app.listen 8080, () ->
+    @app.listen 8081, () ->
     @port = @app.address().port
     console.log "multislide running on port #{@port}"
 
